@@ -1,0 +1,14 @@
+name: Documentation improvement
+description: Improve the English or Russian documentation
+labels: [documentation]
+body:
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is inaccurate or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: Suggested wording or location

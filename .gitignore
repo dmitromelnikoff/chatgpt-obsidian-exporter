@@ -1,4 +1,4 @@
-# Build outputs and local development
+# Outputs and local development
 /dist/
 /tmp/
 *.log
@@ -9,12 +9,13 @@ __pycache__/
 *.pyc
 node_modules/
 
-# Do not commit private conversation exports or credentials
+# Never commit conversations or downloaded user data
+conversations*.json
 conversation.json
 conversation.log
-conversations*.json
 artifacts.json
 steps.json
+recovered_files.json
 *.har
 *.pem
 *.key

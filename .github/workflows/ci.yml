@@ -1,0 +1,28 @@
+name: Validation
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Syntax
+        run: |
+          for file in core.js renderer.js page.js popup.js reliability.js zip.js; do
+            node --check "$file"
+          done
+      - name: Node smoke tests
+        run: node tests/smoke.js
+      - name: Package extension
+        run: python3 scripts/package_extension.py
+      - name: Verify release ZIP content
+        run: python3 scripts/package_extension.py --verify

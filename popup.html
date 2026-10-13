@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChatGPT → Obsidian</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { width: 335px; margin: 0; padding: 17px; font: 13px/1.4 system-ui, sans-serif; background: #111827; color: #f3f4f6; }
+    h1 { font-size: 17px; margin: 0 0 5px; }
+    p { color: #cbd5e1; margin: 4px 0 14px; }
+    label { display: flex; align-items: center; gap: 9px; margin: 11px 0; cursor: pointer; }
+    input[type="checkbox"] { width: 17px; height: 17px; accent-color: #67e8f9; }
+    .nested-option { margin-left: 25px; margin-top: 4px; }
+    .nested-option:has(input:disabled) { opacity: .55; }
+    input[type="number"] { width: 65px; padding: 5px; margin-left: auto; background: #1f2937; color: #fff; border: 1px solid #6b7280; border-radius: 6px; }
+    button { width: 100%; margin: 11px 0 0; padding: 11px; border: 0; border-radius: 8px; background: #14b8a6; color: #052e2b; font-size: 14px; font-weight: bold; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: progress; }
+    #status { min-height: 24px; font-size: 12px; color: #fbbf24; margin-top: 11px; }
+    small { display:block; color: #a3b4c9; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>ChatGPT → Obsidian</h1>
+  <p>Протокол пар «запрос → ответ», ссылки на сообщения и файлы, исходный JSON и LOG. Данные обрабатываются в браузере.</p>
+  <label><input type="checkbox" id="attachments" checked> Вложить доступные файлы</label>
+  <label><input type="checkbox" id="images" checked> Вложить доступные изображения</label>
+  <label class="nested-option"><input type="checkbox" id="incoming"> Скачать входящие вложения из моих запросов</label>
+  <label><input type="checkbox" id="pace" checked> Пауза между скачиваниями файлов</label>
+  <label class="nested-option" for="paceSeconds">Задержка (сек) <input id="paceSeconds" type="number" min="0.5" max="30" step="0.5" value="1.5"></label>
+  <label><input type="checkbox" id="log"> Скачать LOG также отдельным файлом</label>
+  <label>Макс. размер одного вложения, МБ <input id="limit" type="number" min="1" max="500" value="100"></label>
+  <button type="button" id="export">Экспортировать текущий чат</button>
+  <div id="status" role="status"></div>
+  <small>Исходящие файлы и изображения скачиваются по умолчанию. Входящие — только по отдельной галочке. Между файлами по умолчанию пауза 1,5 сек. При временных ошибках — до двух повторов. Во вкладке ChatGPT появится панель прогресса.</small>
+  <script src="popup.js"></script>
+</body>
+</html>

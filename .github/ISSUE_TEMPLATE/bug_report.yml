@@ -1,0 +1,43 @@
+name: Bug report
+description: Report an issue with a sanitized reproduction
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Never attach full personal chats, private screenshots, authentication headers, or sensitive exports. Use synthetic or redacted data."
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      placeholder: "0.3.8"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or minimal fixture
+      description: Remove private names, tokens, and conversation content.
