@@ -1,0 +1,25 @@
+# Build outputs and local development
+/dist/
+/tmp/
+*.log
+*.swp
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+node_modules/
+
+# Do not commit private conversation exports or credentials
+conversation.json
+conversation.log
+conversations*.json
+artifacts.json
+steps.json
+*.har
+*.pem
+*.key
+.env
+.env.*
+private/
+user-data/
+exports/
