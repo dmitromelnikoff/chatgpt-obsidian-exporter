@@ -1,0 +1,40 @@
+name: One-time source import
+on:
+  push:
+    paths:
+      - '.bootstrap/READY'
+permissions:
+  contents: write
+jobs:
+  unpack:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Check payload and unpack public source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .bootstrap/part-* > "$RUNNER_TEMP/source.b64"
+          base64 -d "$RUNNER_TEMP/source.b64" > "$RUNNER_TEMP/source.tar.xz"
+          echo '372af1f2e1425ac9b23cf9ce9a9e465c03ec5aedad701358aef69ff8a548caa0  '"$RUNNER_TEMP/source.tar.xz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/staging"
+          tar -xJf "$RUNNER_TEMP/source.tar.xz" -C "$RUNNER_TEMP/staging"
+          test -f "$RUNNER_TEMP/staging/manifest.json"
+          test -f "$RUNNER_TEMP/staging/tests/smoke.js"
+          cp -a "$RUNNER_TEMP/staging/." .
+          rm -rf .bootstrap .github/workflows/one-time-import.yml
+          node tests/smoke.js
+          for file in core.js renderer.js page.js popup.js reliability.js zip.js; do node --check "$file"; done
+          python3 scripts/package_extension.py --verify
+      - name: Commit source and documentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: publish ChatGPT Obsidian Exporter v0.3.8"
+          git push origin HEAD:main
