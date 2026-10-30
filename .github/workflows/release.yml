@@ -1,0 +1,54 @@
+name: Publish stable GitHub Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event.head_commit.message == 'release: v0.3.9.2') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate extension
+        run: |
+          set -euo pipefail
+          for file in core.js renderer.js page.js popup.js reliability.js zip.js dom-button.js; do
+            node --check "$file"
+          done
+          node tests/smoke.js
+          node tests/button-toggle.js
+      - name: Build and verify installable ZIP
+        run: python3 scripts/package_extension.py --verify
+      - name: Create GitHub Release with ZIP asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION=$(python3 -c 'import json; print(json.load(open("manifest.json"))["version"])')
+          if [ "$VERSION" != "0.3.9.2" ]; then
+            echo "Refusing to publish unexpected extension version: $VERSION" >&2
+            exit 1
+          fi
+          TAG="v$VERSION"
+          ZIP="dist/chatgpt-obsidian-exporter-v$VERSION.zip"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; leaving the published files intact."
+            exit 0
+          fi
+          gh release create "$TAG" "$ZIP" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "ChatGPT Obsidian Exporter $TAG" \
+            --notes-file "docs/release-v0.3.9.2.md"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,name,url,assets

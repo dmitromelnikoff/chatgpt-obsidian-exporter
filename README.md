@@ -4,7 +4,7 @@
 
 [English](README.md) · [Русский](README.ru.md) · [Installation](#quick-start) · [Archive format](docs/export-format.md) · [Contributing](CONTRIBUTING.md)
 
-**Version:** 0.3.9.2 · **Platform:** Chrome Manifest V3 · **Status:** automation preview
+**Version:** 0.3.9.2 · **Platform:** Chrome Manifest V3 · **Status:** stable release
 
 ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT conversation** into a self-contained ZIP archive. It includes readable Markdown, a numbered navigation protocol with Obsidian wiki-links, available files and images, the source conversation JSON, and a report showing what was and was not saved.
 
@@ -31,7 +31,7 @@ ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT
 | Transparency | ZIP includes a machine-readable asset registry and human-readable export report. |
 
 
-## Automation / DOM button (v0.3.9.2 preview)
+## Automation / DOM button (v0.3.9.2)
 
 On a ChatGPT conversation page a fixed **Экспорт ZIP** button appears in the bottom-right corner. A browser-based AI agent or user can click it directly in the DOM. Unlike the Popup route, this action uses fixed default settings with **incoming uploads enabled**, as well as outbound files and images. The existing Popup still offers its original controls.
 
@@ -42,16 +42,16 @@ On a ChatGPT conversation page a fixed **Экспорт ZIP** button appears in 
 - **ready means ZIP creation and a browser download attempt**, not proof of a completed download. The automation environment must check Chrome's downloads before moving the file.
 - Default asset settings: include outbound files, images and incoming user uploads; paced downloads at 1.5 s; max 100 MB per file, with the pre-existing total download budget and error handling. Unavailable assets remain explicitly reported.
 
-This is a preview candidate requiring a live test on an authenticated ChatGPT tab. To install from this branch, run `python3 scripts/package_extension.py` and load the extracted `dist/chatgpt-obsidian-exporter-v0.3.9.2.zip` via `chrome://extensions`.
+The DOM button, file downloads and visibility toggle have been exercised in Chrome. Download the installable ZIP from [GitHub Releases](https://github.com/dmitromelnikoff/chatgpt-obsidian-exporter/releases/tag/v0.3.9.2), extract it to a permanent folder, then choose that folder in `chrome://extensions` → Developer mode → Load unpacked. No Chrome Web Store listing is available.
 
 ## Quick start
 
 This repository's root is the **unpacked Chrome extension directory**; there is no npm install or build step for local use.
 
-1. Download the source archive from GitHub (or clone this repository) and extract it into a permanent folder.
+1. Download the installable ZIP from [GitHub Releases](https://github.com/dmitromelnikoff/chatgpt-obsidian-exporter/releases/tag/v0.3.9.2) (or clone the source repository) and extract it into a permanent folder.
 2. Open `chrome://extensions`, turn on **Developer mode**, select **Load unpacked**, and choose the folder containing `manifest.json`.
-3. Open a conversation at `https://chatgpt.com/c/...` and click the extension icon.
-4. Choose whether to include files, images, and your own incoming uploads. Click the export button.
+3. Open a conversation at `https://chatgpt.com/c/...` and click **Экспорт ZIP** at the bottom-right, or open the extension Popup for manual options.
+4. In the Popup, choose whether to include files, images, and your own incoming uploads; the on-page button uses its own fixed defaults, with incoming uploads included.
 5. The extension shows progress on the ChatGPT page and downloads a ZIP.
 6. Extract the ZIP's **entire named root folder** into your Obsidian vault. Open `00_Протокол.md`.
 
@@ -139,7 +139,7 @@ See [Security policy](SECURITY.md) and [Privacy notes](docs/privacy.md) for deta
 
 Bug reports and small, reproducible test cases are welcome via [GitHub Issues](https://github.com/dmitromelnikoff/chatgpt-obsidian-exporter/issues). **Never upload entire personal conversations as public issue attachments.** Please use synthetic, redacted fixtures.
 
-[Contributing](CONTRIBUTING.md) · [Support](SUPPORT.md) · [Changes](CHANGELOG.md) · [Release notes](docs/release-v0.3.8.md)
+[Contributing](CONTRIBUTING.md) · [Support](SUPPORT.md) · [Changes](CHANGELOG.md) · [Release notes](docs/release-v0.3.9.2.md)
 
 ## License and author
 

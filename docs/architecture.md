@@ -4,7 +4,9 @@ This is a Chrome Manifest V3 extension without a persistent background service w
 
 ```mermaid
 flowchart TD
-    A[Popup: options] --> B[Injected page scripts]
+    A[Popup: manual options] --> B[Shared exporter]
+    X[DOM button: one-click full export] --> B
+    P[Popup visibility checkbox] --> X
     B --> C[Session and conversation retrieval]
     C --> D[Core: selected path, turns and asset candidates]
     D --> E[Renderer: Markdown, fallback and static DIL]

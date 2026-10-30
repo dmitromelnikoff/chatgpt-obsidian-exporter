@@ -2,7 +2,7 @@
 
 This project uses [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) style. The first public source publication starts at 0.3.8; prior iterations were developed and tested privately rather than reconstructed as Git commits.
 
-## [0.3.9.2] — Optional DOM button visibility
+## [0.3.9.2] — Stable: DOM button and optional visibility
 
 - Added a default-on **Включить кнопку** checkbox as the first Popup option.
 - Immediately show/hide the ChatGPT-page ZIP button when the setting changes; remember the choice across sessions using `chrome.storage.local`.
@@ -18,7 +18,7 @@ This project uses [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) style
 - Keep best-effort completeness wording; this update does not claim access to hidden server history.
 - Add regression checks for archive version and intentional filtering.
 
-## [0.3.9] — Automation preview (pending real-session validation)
+## [0.3.9] — Initial automation preview (validated in later builds)
 
 - A single-click **Экспорт ZIP** button on ChatGPT conversation pages, including SPA route changes.
 - Automatically includes available inbound and outbound attachments in the DOM-button mode; Popup configuration unchanged.

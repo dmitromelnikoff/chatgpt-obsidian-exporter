@@ -28,10 +28,10 @@ jobs:
         run: python3 scripts/package_extension.py
       - name: Verify release ZIP content
         run: python3 scripts/package_extension.py --verify
-      - name: Upload installable extension (preview)
+      - name: Upload CI extension artifact
         uses: actions/upload-artifact@v4
         with:
-          name: chatgpt-obsidian-exporter-v0.3.9.2-preview
+          name: chatgpt-obsidian-exporter-v0.3.9.2-ci
           path: dist/chatgpt-obsidian-exporter-v0.3.9.2.zip
           if-no-files-found: error
           retention-days: 30
