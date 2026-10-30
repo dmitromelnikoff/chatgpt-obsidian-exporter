@@ -1,7 +1,7 @@
 /* No network: normalize a ChatGPT conversation into Obsidian-ready files. */
 (() => {
   'use strict';
-  const EXPORTER_VERSION = '0.3.9.1';
+  const EXPORTER_VERSION = '0.3.9.2';
   const pad = (n) => String(n).padStart(4, '0');
   const sanitizeName = (value, max = 90) => String(value || 'Без названия')
     .replace(/[\u0000-\u001f\u007f<>:"/\\|?*\[\]#^]/g, '-')

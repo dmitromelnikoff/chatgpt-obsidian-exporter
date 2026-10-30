@@ -2,6 +2,14 @@
 
 This project uses [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) style. The first public source publication starts at 0.3.8; prior iterations were developed and tested privately rather than reconstructed as Git commits.
 
+## [0.3.9.2] — Optional DOM button visibility
+
+- Added a default-on **Включить кнопку** checkbox as the first Popup option.
+- Immediately show/hide the ChatGPT-page ZIP button when the setting changes; remember the choice across sessions using `chrome.storage.local`.
+- Keep the Popup export fully available while the button is hidden and let an already-running export finish.
+- Request the standard `storage` permission (no new site access).
+- Add automated visibility and persistence regression tests.
+
 ## [0.3.9.1] — Export provenance / diagnostics fix
 
 - Fix the internal exporter version and ZIP README so they agree with Chrome manifest.

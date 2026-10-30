@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   // Allow re-injection of a newer version without keeping a stale exporter.
-  if (globalThis.__ChatGPTObsidianExporter?.version === '0.3.9.1') return;
+  if (globalThis.__ChatGPTObsidianExporter?.version === '0.3.9.2') return;
   const core = globalThis.ChatGPTObsidianCore;
   const zipper = globalThis.ObsidianZip;
   const reliability = globalThis.ChatGPTObsidianReliability;
@@ -537,5 +537,5 @@
       busy = false;
     }
   }
-  globalThis.__ChatGPTObsidianExporter = { version: '0.3.9.1', start };
+  globalThis.__ChatGPTObsidianExporter = { version: '0.3.9.2', start };
 })();

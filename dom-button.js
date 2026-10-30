@@ -5,12 +5,16 @@
   if (globalThis.__ChatGPTObsidianDomLauncher) return;
   const BUTTON_ID = 'chatgpt-obsidian-export-zip-button';
   const PANEL_ID = 'chatgpt-obsidian-export-panel';
+  const SHOW_EXPORT_BUTTON_KEY = 'chatgpt-obsidian-exporter-show-dom-button';
   const HOSTS = new Set(['chatgpt.com', 'chat.openai.com']);
   const CHAT_PATH = /(?:^|\/)c\/[A-Za-z0-9-]{16,}(?:\/|$)/;
   let button = null;
   let running = false;
   let observedPath = null;
   let schedulePending = false;
+  let preferenceReady = false;
+  let enabled = true;
+  let sawPreferenceChange = false;
 
   function isChatPage() {
     return location.protocol === 'https:' && HOSTS.has(location.hostname) && CHAT_PATH.test(location.pathname);
@@ -24,7 +28,7 @@
     button.title = tooltip || 'Сохранить чат и доступные входящие/исходящие вложения в ZIP';
   }
   async function run() {
-    if (running || !isChatPage() || !button) return;
+    if (running || !preferenceReady || !enabled || !isChatPage() || !button) return;
     const existing = document.getElementById(PANEL_ID);
     if (existing?.dataset.exportStatus === 'running') {
       state('running', 'Экспорт уже выполняется через Popup');
@@ -77,10 +81,10 @@
       + 'cursor:pointer;box-shadow:0 5px 22px #0005;min-height:42px;';
     button.addEventListener('click', run);
     document.body.append(button);
-    state('idle');
+    state(running ? 'running' : 'idle');
   }
   function sync() {
-    const visible = isChatPage();
+    const visible = preferenceReady && enabled && isChatPage();
     const pathname = location.pathname;
     if (pathname !== observedPath) {
       observedPath = pathname;
@@ -109,11 +113,34 @@
     schedulePending = true;
     queueMicrotask(() => { schedulePending = false; sync(); });
   }
-  sync();
+  // Subscribe first: a change during the asynchronous initial read wins.
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'local' || !Object.prototype.hasOwnProperty.call(changes, SHOW_EXPORT_BUTTON_KEY)) return;
+    sawPreferenceChange = true;
+    enabled = changes[SHOW_EXPORT_BUTTON_KEY].newValue !== false;
+    preferenceReady = true;
+    sync();
+  });
+  chrome.storage.local.get({ [SHOW_EXPORT_BUTTON_KEY]: true })
+    .then(settings => {
+      if (!sawPreferenceChange) {
+        enabled = settings[SHOW_EXPORT_BUTTON_KEY] !== false;
+        preferenceReady = true;
+        sync();
+      }
+    })
+    .catch(() => {
+      // Safe fallback if storage is unavailable: show the default-on button.
+      if (!sawPreferenceChange) {
+        enabled = true;
+        preferenceReady = true;
+        sync();
+      }
+    });
   // Handles ChatGPT SPA route changes without modifying site history APIs.
   new MutationObserver(scheduleSync).observe(document.documentElement, {childList:true, subtree:true});
   window.addEventListener('popstate', scheduleSync);
   window.addEventListener('hashchange', scheduleSync);
   window.addEventListener('pageshow', scheduleSync);
-  globalThis.__ChatGPTObsidianDomLauncher = {version:'0.3.9.1'};
+  globalThis.__ChatGPTObsidianDomLauncher = {version:'0.3.9.2'};
 })();

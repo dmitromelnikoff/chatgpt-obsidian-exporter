@@ -1,6 +1,6 @@
-# Архитектура (v0.3.8)
+# Архитектура (v0.3.9.2)
 
-Это расширение Chrome Manifest V3 без постоянно работающего service worker. `popup.js` внедряет `zip.js`, `renderer.js`, `core.js`, `reliability.js` и `page.js` в открытую вкладку ChatGPT через `chrome.scripting`. Панель на странице показывает ход экспорта и ссылки скачивания.
+Это расширение Chrome Manifest V3 без постоянно работающего service worker. `popup.js` внедряет `zip.js`, `renderer.js`, `core.js`, `reliability.js` и `page.js` в открытую вкладку ChatGPT через `chrome.scripting`. Панель на странице показывает ход экспорта и ссылки скачивания. Скрипты ChatGPT также загружаются автоматически для DOM-кнопки агента; первая галочка Popup управляет её видимостью через `chrome.storage.local` и `chrome.storage.onChanged`. Кнопка появляется/исчезает сразу во всех вкладках без отмены уже запущенного экспорта.
 
 ```mermaid
 flowchart TD

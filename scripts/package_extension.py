@@ -33,7 +33,7 @@ def verify(path):
         manifest = json.loads(archive.read('manifest.json').decode('utf-8'))
         assert manifest['manifest_version'] == 3
         for name in manifest.get('permissions', []):
-            assert name in {'activeTab', 'scripting'}, f'Unreviewed permission: {name}'
+            assert name in {'activeTab', 'scripting', 'storage'}, f'Unreviewed permission: {name}'
     print('Release ZIP verified:',path)
 
 if __name__ == '__main__':

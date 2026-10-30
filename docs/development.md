@@ -8,10 +8,11 @@ cd chatgpt-obsidian-exporter
 node --check core.js && node --check renderer.js && node --check page.js
 node --check popup.js && node --check reliability.js && node --check zip.js
 node tests/smoke.js
+node tests/button-toggle.js
 python3 scripts/package_extension.py
 ```
 
-Load the repository folder via `chrome://extensions` → Developer mode → Load unpacked. Check the resulting `dist/chatgpt-obsidian-exporter-v0.3.8.zip` by extracting it and loading the extracted folder the same way.
+Load the repository folder via `chrome://extensions` → Developer mode → Load unpacked. Check the resulting `dist/chatgpt-obsidian-exporter-v0.3.9.2.zip` by extracting it and loading the extracted folder the same way.
 
 A manual browser regression must verify ZIP generation on a conversation you control, internal Obsidian links, one code block, and an attachment if available. Node tests **cannot** simulate live authenticated ChatGPT API behavior or validate the Obsidian desktop renderer.
 

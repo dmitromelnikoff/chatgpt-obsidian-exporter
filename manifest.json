@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ChatGPT → Obsidian Export",
   "description": "Локальный протокол пар запрос–ответ для Obsidian, ссылки на сообщения, вложения и полный архив JSON.",
-  "version": "0.3.9.1",
+  "version": "0.3.9.2",
   "minimum_chrome_version": "100",
   "action": {
     "default_title": "Экспорт ChatGPT в Obsidian",
@@ -10,7 +10,8 @@
   },
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "content_scripts": [
     {

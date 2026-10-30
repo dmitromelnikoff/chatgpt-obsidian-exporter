@@ -1,6 +1,6 @@
-# Architecture (v0.3.8)
+# Architecture (v0.3.9.2)
 
-This is a Chrome Manifest V3 extension without a persistent background service worker. `popup.js` injects `zip.js`, `renderer.js`, `core.js`, `reliability.js`, and `page.js` into the active ChatGPT tab using `chrome.scripting`. A page-side export panel reports progress and provides download links.
+This is a Chrome Manifest V3 extension without a persistent background service worker. `popup.js` injects `zip.js`, `renderer.js`, `core.js`, `reliability.js`, and `page.js` into the active ChatGPT tab using `chrome.scripting`. A page-side export panel reports progress and provides download links. Auto-loaded ChatGPT-only content scripts also expose a bottom-right DOM button for agent-based export. The Popup controls its visibility via a default-on `chrome.storage.local` preference; `dom-button.js` listens to `chrome.storage.onChanged`, updates all open tabs without a reload, and does not interrupt running exports.
 
 ```mermaid
 flowchart TD
