@@ -4,7 +4,7 @@
 
 [English](README.md) · [Русский](README.ru.md) · [Installation](#quick-start) · [Archive format](docs/export-format.md) · [Contributing](CONTRIBUTING.md)
 
-**Version:** 0.3.8 · **Platform:** Chrome Manifest V3 · **Status:** first public source release
+**Version:** 0.3.9 · **Platform:** Chrome Manifest V3 · **Status:** automation preview
 
 ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT conversation** into a self-contained ZIP archive. It includes readable Markdown, a numbered navigation protocol with Obsidian wiki-links, available files and images, the source conversation JSON, and a report showing what was and was not saved.
 
@@ -20,7 +20,7 @@ ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT
 
 ## Highlights
 
-| Area | What v0.3.8 does |
+| Area | What v0.3.9 does |
 | --- | --- |
 | Conversation export | Exports the current chat; splits lengthy Markdown transcripts into parts of about 200 KiB. |
 | Navigation | `00_Протокол.md` with numbered Q&A steps and full-path Obsidian wiki-links. |
@@ -29,6 +29,19 @@ ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT
 | Attachments | Attempts to download detected outbound files, images, and eligible tool-image candidates; optionally includes inbound uploads. |
 | Reliability | Serial downloads, configurable pacing, limited retries for transient errors, size limits, and integrity metadata. |
 | Transparency | ZIP includes a machine-readable asset registry and human-readable export report. |
+
+
+## Automation / DOM button (v0.3.9 preview)
+
+On a ChatGPT conversation page a fixed **Экспорт ZIP** button appears in the bottom-right corner. A browser-based AI agent or user can click it directly in the DOM. Unlike the Popup route, this action uses fixed default settings with **incoming uploads enabled**, as well as outbound files and images. The existing Popup still offers its original controls.
+
+- The button is injected only on ChatGPT domains and displayed only on conversation paths, including SPA navigation. No extra Chrome permission is requested.
+- Agent target: `#chatgpt-obsidian-export-zip-button`. Read `data-export-status`: `idle`, `running`, `ready`, or `error`.
+- Detailed progress appears in `#chatgpt-obsidian-export-panel` with its own `data-export-status` (`running`, `ready`, `error`).
+- **ready means ZIP creation and a browser download attempt**, not proof of a completed download. The automation environment must check Chrome's downloads before moving the file.
+- Default asset settings: include outbound files, images and incoming user uploads; paced downloads at 1.5 s; max 100 MB per file, with the pre-existing total download budget and error handling. Unavailable assets remain explicitly reported.
+
+This is a preview candidate requiring a live test on an authenticated ChatGPT tab. To install from this branch, run `python3 scripts/package_extension.py` and load the extracted `dist/chatgpt-obsidian-exporter-v0.3.9.zip` via `chrome://extensions`.
 
 ## Quick start
 
@@ -106,7 +119,7 @@ node tests/smoke.js
 python3 scripts/package_extension.py
 ```
 
-The Python command creates `dist/chatgpt-obsidian-exporter-v0.3.8.zip` containing extension runtime files only. Node.js is used for checks; Python is used solely for packaging, **not** for running the extension.
+The Python command creates `dist/chatgpt-obsidian-exporter-v0.3.9.zip` containing extension runtime files only. Node.js is used for checks; Python is used solely for packaging, **not** for running the extension.
 
 ## Security, privacy and limitations
 

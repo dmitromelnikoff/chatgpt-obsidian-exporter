@@ -2,6 +2,13 @@
 
 This project uses [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) style. The first public source publication starts at 0.3.8; prior iterations were developed and tested privately rather than reconstructed as Git commits.
 
+## [0.3.9] — Automation preview (pending real-session validation)
+
+- A single-click **Экспорт ZIP** button on ChatGPT conversation pages, including SPA route changes.
+- Automatically includes available inbound and outbound attachments in the DOM-button mode; Popup configuration unchanged.
+- DOM statuses for RPA agents; no new Chrome permissions; uses the original exporter and ZIP layout.
+- Automated syntax and synthetic browser tests only; downloading authenticated ChatGPT attachments must be validated by the user.
+
 ## [0.3.8] — Initial public source publication
 
 ### Added

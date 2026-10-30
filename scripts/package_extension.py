@@ -8,7 +8,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 ROOT = Path(__file__).resolve().parent.parent
 RUNTIME = (
     'manifest.json', 'popup.html', 'popup.js', 'core.js', 'renderer.js',
-    'page.js', 'reliability.js', 'zip.js',
+    'page.js', 'reliability.js', 'zip.js', 'dom-button.js',
 )
 
 def make():

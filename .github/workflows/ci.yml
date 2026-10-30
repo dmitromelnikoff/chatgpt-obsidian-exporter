@@ -17,7 +17,7 @@ jobs:
           python-version: '3.12'
       - name: Syntax
         run: |
-          for file in core.js renderer.js page.js popup.js reliability.js zip.js; do
+          for file in core.js renderer.js page.js popup.js reliability.js zip.js dom-button.js; do
             node --check "$file"
           done
       - name: Node smoke tests

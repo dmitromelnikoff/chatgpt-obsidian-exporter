@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   // Allow re-injection of a newer version without keeping a stale exporter.
-  if (globalThis.__ChatGPTObsidianExporter?.version === '0.3.8') return;
+  if (globalThis.__ChatGPTObsidianExporter?.version === '0.3.9') return;
   const core = globalThis.ChatGPTObsidianCore;
   const zipper = globalThis.ObsidianZip;
   const reliability = globalThis.ChatGPTObsidianReliability;
@@ -15,6 +15,7 @@
     if (old) old.remove();
     const root = document.createElement('section');
     root.id = 'chatgpt-obsidian-export-panel';
+    root.dataset.exportStatus = 'running';
     root.setAttribute('role', 'status');
     root.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;width:min(410px,calc(100vw - 32px));background:#0f172a;color:white;font:13px/1.5 system-ui,sans-serif;padding:17px;box-shadow:0 8px 35px #0009;border:1px solid #64748b;border-radius:12px;';
     const title = document.createElement('strong');
@@ -30,8 +31,8 @@
     root.append(title, state, details, links, close);
     document.body.append(root);
     return {
-      set: (message, more = '') => { state.textContent = message; details.textContent = more; },
-      error: (error) => { state.textContent = 'Экспорт завершился ошибкой'; details.textContent = String(error.message || error); },
+      set: (message, more = '') => { state.textContent = message; details.textContent = more; if (message.startsWith('ZIP подготовлен')) root.dataset.exportStatus = 'ready'; },
+      error: (error) => { root.dataset.exportStatus = 'error'; state.textContent = 'Экспорт завершился ошибкой'; details.textContent = String(error.message || error); },
       link: (blob, name, label) => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -526,5 +527,5 @@
       busy = false;
     }
   }
-  globalThis.__ChatGPTObsidianExporter = { version: '0.3.8', start };
+  globalThis.__ChatGPTObsidianExporter = { version: '0.3.9', start };
 })();
