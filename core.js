@@ -1,6 +1,7 @@
 /* No network: normalize a ChatGPT conversation into Obsidian-ready files. */
 (() => {
   'use strict';
+  const EXPORTER_VERSION = '0.3.9.1';
   const pad = (n) => String(n).padStart(4, '0');
   const sanitizeName = (value, max = 90) => String(value || 'Без названия')
     .replace(/[\u0000-\u001f\u007f<>:"/\\|?*\[\]#^]/g, '-')
@@ -43,15 +44,30 @@
       }
       messages = live.reverse();
     } else throw Error('В ответе нет messages или mapping.');
-    const visible = messages.filter(m => {
+    // Explain intentional filtering without changing the readable-transcript policy.
+    // All API records remain available in conversation.json.
+    const excludedMessagesByReason = {
+      non_user_assistant_role: 0,
+      visually_hidden: 0,
+      non_public_recipient: 0,
+      service_channel: 0,
+      non_readable_content_type: 0
+    };
+    function exclusionReason(m) {
       const role = m.author && m.author.role || m.role;
       const channel = m.metadata && m.metadata.channel;
       const type = m.content && m.content.content_type;
-      return (role === 'user' || role === 'assistant') &&
-        !(m.metadata && m.metadata.is_visually_hidden_from_conversation) &&
-        (!m.recipient || m.recipient === 'all') &&
-        !['analysis', 'commentary', 'justify', 'confidence', 'notification'].includes(channel) &&
-        !['thoughts', 'reasoning_recap', 'analysis', 'tool_result', 'execution_output'].includes(type);
+      if (role !== 'user' && role !== 'assistant') return 'non_user_assistant_role';
+      if (m.metadata && m.metadata.is_visually_hidden_from_conversation) return 'visually_hidden';
+      if (m.recipient && m.recipient !== 'all') return 'non_public_recipient';
+      if (['analysis', 'commentary', 'justify', 'confidence', 'notification'].includes(channel)) return 'service_channel';
+      if (['thoughts', 'reasoning_recap', 'analysis', 'tool_result', 'execution_output'].includes(type)) return 'non_readable_content_type';
+      return null;
+    }
+    const visible = messages.filter(m => {
+      const reason = exclusionReason(m);
+      if (reason) excludedMessagesByReason[reason]++;
+      return !reason;
     });
     return {
       id: data.conversation_id || data.id || 'unknown',
@@ -60,6 +76,7 @@
       updated: toISO(data.update_time),
       messages: visible,
       rawMessagesCount: messages.length,
+      excludedMessagesByReason,
       source: data.export_source || 'api'
     };
   }
@@ -600,17 +617,23 @@
     }
     const failures = artifacts.filter(a => a.status !== 'downloaded').map(a => ({ id: a.id, name: a.name, reason: a.error || a.status }));
     const paginationChecked = data._export_pagination_checked === true;
+    const paginationStatus = data._export_pagination_status || 'unknown';
     const completeness = chat.source === 'dom' ? 'partial_dom' : (paginationChecked ? 'api_paginated_unverified' : 'api_unverified');
     const visibleWithoutExtractableContent = chat.messages.filter(m =>
       !visibleText(m) && !assetList.some(a => a.messageIds.includes(m.id))).length;
     const manifest = {
-      exporter: 'ChatGPT → Obsidian Export 0.3.8', exported,
+      exporter: `ChatGPT → Obsidian Export ${EXPORTER_VERSION}`, exporter_version: EXPORTER_VERSION, exported,
       markdown_renderer: renderStats,
       visible_messages_without_extractable_content: visibleWithoutExtractableContent,
       completeness, pagination_checked: paginationChecked,
+      pagination_status: paginationStatus,
+      pagination_exhausted: paginationStatus === 'exhausted',
+      page_message_counts: data._export_page_message_counts || null,
+      pagination_deduplicated_entries: data._export_deduplicated_messages || 0,
       pages_fetched: data._export_page_count || null,
       export_warning: data.export_warning || null,
       message_entries_unselected: Math.max(0, chat.rawMessagesCount - chat.messages.length),
+      excluded_message_reasons: chat.excludedMessagesByReason,
       conversation_id: chat.id, title: chat.title, url, source: chat.source,
       visible_messages: chat.messages.length, steps: steps.length,
       raw_messages: chat.rawMessagesCount, transcript_parts: parts,
@@ -668,7 +691,9 @@
       `- Не скачано из-за лимитов размера: ${assetList.filter(a => a.status === 'limited').length}`,
       '- Предельный суммарный объём вложений в одном экспорте: 512 МиБ.',
       `- Оценка полноты истории: ${completeness} (не гарантия доступности всех веток и скрытых данных).`,
-      `- API-записей выбранной ветки: ${chat.rawMessagesCount}; видимых: ${chat.messages.length}; отфильтровано: ${Math.max(0, chat.rawMessagesCount - chat.messages.length)}.`,
+      `- Пагинация API: ${paginationStatus}; страниц получено: ${data._export_page_count || 'неизвестно'}; завершение по признаку API: ${paginationStatus === 'exhausted' ? 'да' : 'не подтверждено'}.`,
+      `- Получено API-записей: ${chat.rawMessagesCount}; отобрано в читаемую переписку: ${chat.messages.length}; исключено по правилам отображения: ${Math.max(0, chat.rawMessagesCount - chat.messages.length)}.`,
+      `- Причины исключения (записи сохраняются в исходном JSON): ${Object.entries(chat.excludedMessagesByReason).map(([key, count]) => key + '=' + count).join('; ')}.`,
       `- Видимых сообщений без извлекаемого текста/привязанного файла: ${visibleWithoutExtractableContent} (могут быть служебными или мультимодальными).`,
       `- Не скачано из-за ошибки: ${failures.filter(a => a.status === 'failed').length}`,
       `- Пропущено по настройкам: ${failures.filter(a => a.status === 'skipped').length}`,
@@ -709,10 +734,10 @@
     report.push('', 'Сырые данные включают только то, что доступно через API/интерфейс текущей сессии; скрытые серверные данные не извлекаются.', '');
     files.push({ path: `${prefix}/04_Отчёт экспорта.md`, data: report.join('\n') });
     files.push({ path: `${prefix}/README.md`, data:
-`# Экспорт чата ChatGPT v0.3.8\n\n` +
+`# Экспорт чата ChatGPT v${EXPORTER_VERSION}\n\n` +
 `Начните с **00_Протокол.md**: каждая ссылка ведёт к началу пары «запрос → ответ(ы)» в 01_Переписка/.\n\n` +
 `📥 *курсивом* обозначает файл, приложенный пользователем; 📤 **жирным** — созданный/предоставленный ассистентом.\n` +
-`По умолчанию скачиваются исходящие файлы и изображения; входящие вложения пользователя — только по отдельной галочке. Файлы и изображения включаются независимо. Если файл не скачан, его имя выводится без неработающей ссылки.\n` +
+`Настройки этого экспорта: исходящие файлы — ${options.includeAttachments !== false ? 'включены' : 'выключены'}, изображения — ${options.includeImages !== false ? 'включены' : 'выключены'}, входящие вложения — ${options.includeIncomingAttachments === true ? 'включены' : 'выключены'}. Файлы и изображения включаются независимо. Если файл не скачан, его имя выводится без неработающей ссылки.\n` +
 `Между файлами по умолчанию пауза 1,5 секунды, а при временных ошибках выполняются до двух дополнительных попыток с увеличивающимся ожиданием. История попыток хранится в реестре и отчёте. Строк для отсутствующих вложений нет. Все файлы, включая пропущенные по настройкам, перечислены в **04_Отчёт экспорта.md**.\n\n` +
 `**03_Исходники/conversation.json** хранит исходный ответ API; у сложных Intelligent UI их полные исходники дополнительно сохраняются в **03_Исходники/DIL/**. Динамические элементы не исполняются. **conversation.log** — читаемый текстовый лог, ` +
 `**steps.json** и **artifacts.json** — машинно-читаемые индексы.\n\n` +

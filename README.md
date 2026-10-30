@@ -4,7 +4,7 @@
 
 [English](README.md) · [Русский](README.ru.md) · [Installation](#quick-start) · [Archive format](docs/export-format.md) · [Contributing](CONTRIBUTING.md)
 
-**Version:** 0.3.9 · **Platform:** Chrome Manifest V3 · **Status:** automation preview
+**Version:** 0.3.9.1 · **Platform:** Chrome Manifest V3 · **Status:** automation preview
 
 ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT conversation** into a self-contained ZIP archive. It includes readable Markdown, a numbered navigation protocol with Obsidian wiki-links, available files and images, the source conversation JSON, and a report showing what was and was not saved.
 
@@ -20,7 +20,7 @@ ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT
 
 ## Highlights
 
-| Area | What v0.3.9 does |
+| Area | What v0.3.9.1 does |
 | --- | --- |
 | Conversation export | Exports the current chat; splits lengthy Markdown transcripts into parts of about 200 KiB. |
 | Navigation | `00_Протокол.md` with numbered Q&A steps and full-path Obsidian wiki-links. |
@@ -31,7 +31,7 @@ ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT
 | Transparency | ZIP includes a machine-readable asset registry and human-readable export report. |
 
 
-## Automation / DOM button (v0.3.9 preview)
+## Automation / DOM button (v0.3.9.1 preview)
 
 On a ChatGPT conversation page a fixed **Экспорт ZIP** button appears in the bottom-right corner. A browser-based AI agent or user can click it directly in the DOM. Unlike the Popup route, this action uses fixed default settings with **incoming uploads enabled**, as well as outbound files and images. The existing Popup still offers its original controls.
 
@@ -41,7 +41,7 @@ On a ChatGPT conversation page a fixed **Экспорт ZIP** button appears in 
 - **ready means ZIP creation and a browser download attempt**, not proof of a completed download. The automation environment must check Chrome's downloads before moving the file.
 - Default asset settings: include outbound files, images and incoming user uploads; paced downloads at 1.5 s; max 100 MB per file, with the pre-existing total download budget and error handling. Unavailable assets remain explicitly reported.
 
-This is a preview candidate requiring a live test on an authenticated ChatGPT tab. To install from this branch, run `python3 scripts/package_extension.py` and load the extracted `dist/chatgpt-obsidian-exporter-v0.3.9.zip` via `chrome://extensions`.
+This is a preview candidate requiring a live test on an authenticated ChatGPT tab. To install from this branch, run `python3 scripts/package_extension.py` and load the extracted `dist/chatgpt-obsidian-exporter-v0.3.9.1.zip` via `chrome://extensions`.
 
 ## Quick start
 
@@ -119,7 +119,7 @@ node tests/smoke.js
 python3 scripts/package_extension.py
 ```
 
-The Python command creates `dist/chatgpt-obsidian-exporter-v0.3.9.zip` containing extension runtime files only. Node.js is used for checks; Python is used solely for packaging, **not** for running the extension.
+The Python command creates `dist/chatgpt-obsidian-exporter-v0.3.9.1.zip` containing extension runtime files only. Node.js is used for checks; Python is used solely for packaging, **not** for running the extension.
 
 ## Security, privacy and limitations
 
@@ -145,3 +145,9 @@ Bug reports and small, reproducible test cases are welcome via [GitHub Issues](h
 **License decision pending.** The repository currently does **not** declare an open-source license; public source availability alone does not grant redistribution/modification rights. The owner should select and add a license before actively inviting code contributions or re-use.
 
 Maintainer: [@dmitromelnikoff](https://github.com/dmitromelnikoff).
+
+### Reading export completeness for automation
+
+Do not interpret filtered API records as missing messages: the readable transcript intentionally selects user/assistant content and the accessible original records remain in `03_Исходники/conversation.json`. Inspect `excluded_message_reasons` to see why entries were omitted.
+
+For paginated API exports, `pagination_status: "exhausted"` and `pagination_exhausted: true` mean the exporter followed API page cursors until a page explicitly indicated no older pages. `metadata_missing` means the API did not supply sufficient pagination metadata to verify that stopping point. `completeness: "api_paginated_unverified"` still does **not** guarantee every server branch, hidden record, or attachment was available. Agent workflows should distinguish the accessible selected-branch export from an independently verified complete server archive.

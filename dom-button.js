@@ -115,5 +115,5 @@
   window.addEventListener('popstate', scheduleSync);
   window.addEventListener('hashchange', scheduleSync);
   window.addEventListener('pageshow', scheduleSync);
-  globalThis.__ChatGPTObsidianDomLauncher = {version:'0.3.9'};
+  globalThis.__ChatGPTObsidianDomLauncher = {version:'0.3.9.1'};
 })();

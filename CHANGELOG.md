@@ -2,6 +2,14 @@
 
 This project uses [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) style. The first public source publication starts at 0.3.8; prior iterations were developed and tested privately rather than reconstructed as Git commits.
 
+## [0.3.9.1] — Export provenance / diagnostics fix
+
+- Fix the internal exporter version and ZIP README so they agree with Chrome manifest.
+- Explicitly distinguish API-pagination exhaustion from absent pagination metadata.
+- Include per-page message counts, duplicate count, and readable-transcript filtering reasons.
+- Keep best-effort completeness wording; this update does not claim access to hidden server history.
+- Add regression checks for archive version and intentional filtering.
+
 ## [0.3.9] — Automation preview (pending real-session validation)
 
 - A single-click **Экспорт ZIP** button on ChatGPT conversation pages, including SPA route changes.

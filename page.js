@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   // Allow re-injection of a newer version without keeping a stale exporter.
-  if (globalThis.__ChatGPTObsidianExporter?.version === '0.3.9') return;
+  if (globalThis.__ChatGPTObsidianExporter?.version === '0.3.9.1') return;
   const core = globalThis.ChatGPTObsidianCore;
   const zipper = globalThis.ObsidianZip;
   const reliability = globalThis.ChatGPTObsidianReliability;
@@ -75,8 +75,11 @@
       if (Array.isArray(page1.messages)) {
         const pages = [page1];
         const seen = new Set();
-        let cursor = page1.page_info && page1.page_info.start_cursor;
-        let hasPrevious = Boolean(page1.page_info && page1.page_info.has_previous_page);
+        // Missing page_info is not the same as the API explicitly saying
+        // there are no previous pages. This distinction matters for RPA audits.
+        let metadataPresent = typeof page1.page_info?.has_previous_page === 'boolean';
+        let cursor = page1.page_info?.start_cursor;
+        let hasPrevious = metadataPresent && page1.page_info.has_previous_page;
         let count = 1;
         while (hasPrevious) {
           if (!cursor || seen.has(cursor) || count >= MAX_PAGES) throw Error('Не удалось завершить постраничную загрузку без потери сообщений.');
@@ -85,8 +88,10 @@
           const older = await requestJson(`${base}?num_turns=100&before=${encodeURIComponent(cursor)}`, token);
           if (!Array.isArray(older.messages)) throw Error('Вторая страница имеет неизвестный формат.');
           pages.unshift(older); count++;
-          cursor = older.page_info && older.page_info.start_cursor;
-          hasPrevious = Boolean(older.page_info && older.page_info.has_previous_page);
+          const validMetadata = typeof older.page_info?.has_previous_page === 'boolean';
+          metadataPresent = metadataPresent && validMetadata;
+          cursor = older.page_info?.start_cursor;
+          hasPrevious = validMetadata && older.page_info.has_previous_page;
         }
         const combined = [];
         const seenIds = new Set();
@@ -98,17 +103,22 @@
         }
         const result = { ...page1, messages: combined,
           page_info: { ...page1.page_info, has_previous_page: false, has_next_page: false },
-          _export_page_count: count, _export_pagination_checked: true, export_source: 'api' };
+          _export_page_count: count,
+          _export_page_message_counts: pages.map(p => p.messages.length),
+          _export_deduplicated_messages: pages.reduce((n,p)=>n+p.messages.length,0) - combined.length,
+          _export_pagination_checked: metadataPresent,
+          _export_pagination_status: metadataPresent ? 'exhausted' : 'metadata_missing',
+          export_source: 'api' };
         if (!combined.length) throw Error('API вернул пустую переписку.');
         return result;
       }
-      if (page1.mapping) return { ...page1, export_source: 'api', _export_pagination_checked: false }; 
+      if (page1.mapping) return { ...page1, export_source: 'api', _export_pagination_checked: false, _export_pagination_status: 'mapping_unverified' }; 
       throw Error('Неизвестный формат plural API.');
     } catch (e) {
       panel.set('Пробую резервный API…', `Основной API: ${e.message}`);
       const old = await requestJson(`/backend-api/conversation/${encodeURIComponent(id)}`, token);
       if (!old.mapping && !Array.isArray(old.messages)) throw Error('Резервный API вернул неизвестный формат.');
-      return { ...old, export_source: 'api', _export_pagination_checked: false, export_warning: `Использован резервный API: ${e.message}` }; 
+      return { ...old, export_source: 'api', _export_pagination_checked: false, _export_pagination_status: 'fallback_api_unverified', export_warning: `Использован резервный API: ${e.message}` }; 
     }
   }
   function domContentToMarkdown(node) {
@@ -527,5 +537,5 @@
       busy = false;
     }
   }
-  globalThis.__ChatGPTObsidianExporter = { version: '0.3.9', start };
+  globalThis.__ChatGPTObsidianExporter = { version: '0.3.9.1', start };
 })();
