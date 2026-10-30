@@ -29,7 +29,7 @@ jobs:
       - name: Upload installable extension (preview)
         uses: actions/upload-artifact@v4
         with:
-          name: chatgpt-obsidian-exporter-v0.3.9-preview
-          path: dist/chatgpt-obsidian-exporter-v0.3.9.zip
+          name: chatgpt-obsidian-exporter-v0.3.9.1-preview
+          path: dist/chatgpt-obsidian-exporter-v0.3.9.1.zip
           if-no-files-found: error
           retention-days: 30
