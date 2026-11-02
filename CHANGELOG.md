@@ -2,6 +2,14 @@
 
 This project uses [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) style. The first public source publication starts at 0.3.8; prior iterations were developed and tested privately rather than reconstructed as Git commits.
 
+## [0.3.9.3] — Preview: optional right-side button position
+
+- Add **Поднять кнопку** as the second checkbox in the Popup, directly after **Включить кнопку**.
+- Default remains bottom-right; when enabled, the ZIP button moves to the vertical center of the right edge. Changes apply instantly across ChatGPT tabs and persist in `chrome.storage.local`.
+- Keep positioning independent of visibility, preserve both values while hidden, and keep exports running when switching positions.
+- Extend synthetic regression tests for default and raised positions, persistence, hidden state, navigation, and in-progress exports.
+- No new permissions, no change to ZIP construction or attachment retrieval.
+
 ## [0.3.9.2] — Stable: DOM button and optional visibility
 
 - Added a default-on **Включить кнопку** checkbox as the first Popup option.

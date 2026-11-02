@@ -7,15 +7,24 @@ const incomingCheck = document.getElementById('incoming');
 const paceCheck = document.getElementById('pace');
 const paceSeconds = document.getElementById('paceSeconds');
 const showExportButtonCheck = document.getElementById('showExportButton');
+const raiseExportButtonCheck = document.getElementById('raiseExportButton');
 const SHOW_EXPORT_BUTTON_KEY = 'chatgpt-obsidian-exporter-show-dom-button';
+const RAISE_EXPORT_BUTTON_KEY = 'chatgpt-obsidian-exporter-raise-dom-button';
 
 // The checkbox is default-on. Avoid accidental writes before the stored
 // preference has been read from Chrome's local extension storage.
 showExportButtonCheck.disabled = true;
-chrome.storage.local.get({ [SHOW_EXPORT_BUTTON_KEY]: true })
-  .then(settings => { showExportButtonCheck.checked = settings[SHOW_EXPORT_BUTTON_KEY] !== false; })
-  .catch(error => { statusElement.textContent = 'Не удалось прочитать настройку кнопки: ' + (error.message || error); })
-  .finally(() => { showExportButtonCheck.disabled = false; });
+raiseExportButtonCheck.disabled = true;
+chrome.storage.local.get({ [SHOW_EXPORT_BUTTON_KEY]: true, [RAISE_EXPORT_BUTTON_KEY]: false })
+  .then(settings => {
+    showExportButtonCheck.checked = settings[SHOW_EXPORT_BUTTON_KEY] !== false;
+    raiseExportButtonCheck.checked = settings[RAISE_EXPORT_BUTTON_KEY] === true;
+  })
+  .catch(error => { statusElement.textContent = 'Не удалось прочитать настройки кнопки: ' + (error.message || error); })
+  .finally(() => {
+    showExportButtonCheck.disabled = false;
+    raiseExportButtonCheck.disabled = false;
+  });
 showExportButtonCheck.addEventListener('change', async () => {
   const selected = showExportButtonCheck.checked;
   try {
@@ -23,6 +32,15 @@ showExportButtonCheck.addEventListener('change', async () => {
   } catch (error) {
     showExportButtonCheck.checked = !selected;
     statusElement.textContent = 'Не удалось сохранить настройку кнопки: ' + (error.message || error);
+  }
+});
+raiseExportButtonCheck.addEventListener('change', async () => {
+  const selected = raiseExportButtonCheck.checked;
+  try {
+    await chrome.storage.local.set({ [RAISE_EXPORT_BUTTON_KEY]: selected });
+  } catch (error) {
+    raiseExportButtonCheck.checked = !selected;
+    statusElement.textContent = 'Не удалось сохранить положение кнопки: ' + (error.message || error);
   }
 });
 function updatePaceState() { paceSeconds.disabled = !paceCheck.checked; }

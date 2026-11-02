@@ -9,6 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const SOURCE = fs.readFileSync(path.join(ROOT, 'dom-button.js'), 'utf8');
 const POPUP = fs.readFileSync(path.join(ROOT, 'popup.js'), 'utf8');
 const KEY = 'chatgpt-obsidian-exporter-show-dom-button';
+const RAISE_KEY = 'chatgpt-obsidian-exporter-raise-dom-button';
 const BUTTON_ID = 'chatgpt-obsidian-export-zip-button';
 const PANEL_ID = 'chatgpt-obsidian-export-panel';
 const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -51,8 +52,9 @@ function makePageFixture(hostname = 'chatgpt.com') {
   vm.runInContext(SOURCE,context,{filename:'dom-button.js'});
   return {
     context, location, button:()=>button, panel:(value)=>{panel=value;},
-    resolveGet:(value)=>initialGetResolve({[KEY]:value}),
+    resolveGet:(value, raised = false)=>initialGetResolve({[KEY]:value,[RAISE_KEY]:raised}),
     change(value){for(const fn of listeners)fn({[KEY]:{newValue:value}},'local');},
+    changeRaise(value){for(const fn of listeners)fn({[RAISE_KEY]:{newValue:value}},'local');},
     mutation(){observer();},
     click(){return buttonEvents.click();}
   };
@@ -66,10 +68,25 @@ async function checkDomToggle() {
   f.change(true);
   assert.equal(f.button()?.id,BUTTON_ID,'Enabling shows button immediately');
   assert.equal(f.button().dataset.exportStatus,'idle');
+  assert.equal(f.button().style.bottom,'20px','Default button is at bottom-right');
+  assert.equal(f.button().style.top,'auto');
+  assert.equal(f.button().dataset.exportPosition,'bottom');
+  f.changeRaise(true);
+  assert.equal(f.button().style.top,'50%','Raise should move button to middle of right side');
+  assert.equal(f.button().style.bottom,'auto');
+  assert.equal(f.button().style.transform,'translateY(-50%)');
+  assert.equal(f.button().dataset.exportPosition,'middle');
+  f.changeRaise(false);
+  assert.equal(f.button().style.bottom,'20px','Lowering restores bottom-right');
+  assert.equal(f.button().style.top,'auto');
+  assert.equal(f.button().style.transform,'none');
   f.change(false);
   assert.equal(f.button(),null,'Disabling hides button immediately');
+  f.changeRaise(true);
+  assert.equal(f.button(),null,'Position change must not show a hidden button');
   f.change(true);
   assert.ok(f.button(),'Re-enable restores button');
+  assert.equal(f.button().dataset.exportPosition,'middle','Raising is remembered while button hidden');
 
   let finish;
   let options;
@@ -82,6 +99,9 @@ async function checkDomToggle() {
   }};
   const running = f.click();
   assert.equal(f.button().dataset.exportStatus,'running');
+  assert.equal(f.button().disabled,true);
+  f.changeRaise(false);
+  assert.equal(f.button().style.bottom,'20px','Moving button during export does not interrupt export');
   assert.equal(f.button().disabled,true);
   f.change(false);
   assert.equal(f.button(),null,'Hiding during export leaves no button');
@@ -112,6 +132,12 @@ async function checkDomToggle() {
   g.resolveGet(true);
   await tick();
   assert.ok(g.button(),'Default-on preference shows button');
+  assert.equal(g.button().dataset.exportPosition,'bottom','Position defaults to bottom on first install');
+  const savedRaised = makePageFixture();
+  savedRaised.resolveGet(true,true);
+  await tick();
+  assert.equal(savedRaised.button().dataset.exportPosition,'middle','Raised preference survives page reload');
+  assert.equal(savedRaised.button().style.top,'50%');
   const h = makePageFixture('example.com');
   h.resolveGet(true);
   await tick();
@@ -122,11 +148,16 @@ async function checkDomToggle() {
   race.resolveGet(true);
   await tick();
   assert.equal(race.button(),null,'Late storage read cannot overwrite newer setting');
+  const positionRace=makePageFixture();
+  positionRace.changeRaise(true);
+  positionRace.resolveGet(true,false);
+  await tick();
+  assert.equal(positionRace.button().dataset.exportPosition,'middle','Late storage read must not override newer position setting');
 }
 
-function makePopupFixture(preference) {
+function makePopupFixture(preference, raisePreference = false) {
   const elements=new Map();
-  const ids=['export','status','attachments','images','incoming','pace','paceSeconds','log','limit','showExportButton'];
+  const ids=['export','status','attachments','images','incoming','pace','paceSeconds','log','limit','showExportButton','raiseExportButton'];
   for(const id of ids)elements.set(id,{
     id, checked:['attachments','images','pace','showExportButton'].includes(id),
     value:id==='paceSeconds'?'1.5':'100',
@@ -137,7 +168,7 @@ function makePopupFixture(preference) {
   const scripts=[];
   const chrome={
     storage:{local:{
-      get:async()=>({[KEY]:preference}),
+      get:async()=>({[KEY]:preference,[RAISE_KEY]:raisePreference}),
       set:async value=>{writes.push(value);}
     }},
     tabs:{query:async()=>[{id:42,url:'https://chatgpt.com/c/1234567890abcdef'}]},
@@ -154,22 +185,36 @@ function makePopupFixture(preference) {
 async function checkPopupToggle() {
   const f=makePopupFixture(false);
   const toggle=f.elements.get('showExportButton');
+  const raise=f.elements.get('raiseExportButton');
   assert.equal(toggle.disabled,true,'Prevent toggling before stored preference is loaded');
+  assert.equal(raise.disabled,true,'Position toggle also waits for persisted preference');
   await tick();
   assert.equal(toggle.checked,false,'Popup reflects saved off state');
   assert.equal(toggle.disabled,false);
+  assert.equal(raise.checked,false,'Position is default-off');
+  assert.equal(raise.disabled,false);
+  raise.checked=true;
+  await raise.events.change();
+  assert.equal(f.writes.at(-1)[RAISE_KEY],true,'Position preference persisted independently');
+  raise.checked=false;
+  await raise.events.change();
+  assert.equal(f.writes.at(-1)[RAISE_KEY],false,'Position preference can be reset');
   toggle.checked=true;
   await toggle.events.change();
-  assert.equal(f.writes.length,1);
-  assert.equal(f.writes[0][KEY],true,'Toggle persists via Chrome storage');
+  assert.equal(f.writes.length,3);
+  assert.equal(f.writes.at(-1)[KEY],true,'Visibility toggle persists via Chrome storage');
   toggle.checked=false;
   await toggle.events.change();
   assert.equal(f.writes.at(-1)[KEY],false);
   await f.elements.get('export').events.click();
   assert.equal(f.scripts.length,2,'Manual Popup export remains available with DOM button hidden');
+  const loaded=makePopupFixture(true,true);
+  await tick();
+  assert.equal(loaded.elements.get('raiseExportButton').checked,true,'Popup restores a saved raised position');
+  assert.equal(loaded.elements.get('showExportButton').checked,true,'Position preference is independent of visibility');
 }
 (async()=>{
   await checkDomToggle();
   await checkPopupToggle();
-  console.log('PASS DOM/Popup toggle: default-on, no flash, hide/show, persistence, SPA, concurrent export');
+  console.log('PASS DOM/Popup toggle: bottom/middle, immediate reposition, persistence, hide/show, SPA, concurrent export');
 })().catch(e=>{console.error(e);process.exitCode=1;});

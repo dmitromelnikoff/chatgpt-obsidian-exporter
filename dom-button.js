@@ -6,6 +6,7 @@
   const BUTTON_ID = 'chatgpt-obsidian-export-zip-button';
   const PANEL_ID = 'chatgpt-obsidian-export-panel';
   const SHOW_EXPORT_BUTTON_KEY = 'chatgpt-obsidian-exporter-show-dom-button';
+  const RAISE_EXPORT_BUTTON_KEY = 'chatgpt-obsidian-exporter-raise-dom-button';
   const HOSTS = new Set(['chatgpt.com', 'chat.openai.com']);
   const CHAT_PATH = /(?:^|\/)c\/[A-Za-z0-9-]{16,}(?:\/|$)/;
   let button = null;
@@ -15,6 +16,9 @@
   let preferenceReady = false;
   let enabled = true;
   let sawPreferenceChange = false;
+  let positionReady = false;
+  let raised = false;
+  let sawPositionChange = false;
 
   function isChatPage() {
     return location.protocol === 'https:' && HOSTS.has(location.hostname) && CHAT_PATH.test(location.pathname);
@@ -26,6 +30,15 @@
     button.disabled = value === 'running';
     button.textContent = value === 'running' ? 'Экспорт…' : 'Экспорт ZIP';
     button.title = tooltip || 'Сохранить чат и доступные входящие/исходящие вложения в ZIP';
+  }
+  function positionButton() {
+    if (!button) return;
+    // Raised: center vertically on the right. Default: original bottom-right.
+    // Explicitly reset the other offsets when switching between positions.
+    button.style.top = raised ? '50%' : 'auto';
+    button.style.bottom = raised ? 'auto' : '20px';
+    button.style.transform = raised ? 'translateY(-50%)' : 'none';
+    button.dataset.exportPosition = raised ? 'middle' : 'bottom';
   }
   async function run() {
     if (running || !preferenceReady || !enabled || !isChatPage() || !button) return;
@@ -79,12 +92,13 @@
       + 'display:block;background:#0f766e;color:#fff;border:1px solid #5eead4;'
       + 'border-radius:12px;padding:11px 17px;font:600 14px/1.3 system-ui,sans-serif;'
       + 'cursor:pointer;box-shadow:0 5px 22px #0005;min-height:42px;';
+    positionButton();
     button.addEventListener('click', run);
     document.body.append(button);
     state(running ? 'running' : 'idle');
   }
   function sync() {
-    const visible = preferenceReady && enabled && isChatPage();
+    const visible = preferenceReady && positionReady && enabled && isChatPage();
     const pathname = location.pathname;
     if (pathname !== observedPath) {
       observedPath = pathname;
@@ -115,32 +129,53 @@
   }
   // Subscribe first: a change during the asynchronous initial read wins.
   chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== 'local' || !Object.prototype.hasOwnProperty.call(changes, SHOW_EXPORT_BUTTON_KEY)) return;
-    sawPreferenceChange = true;
-    enabled = changes[SHOW_EXPORT_BUTTON_KEY].newValue !== false;
-    preferenceReady = true;
-    sync();
+    if (areaName !== 'local') return;
+    let changed = false;
+    if (Object.prototype.hasOwnProperty.call(changes, SHOW_EXPORT_BUTTON_KEY)) {
+      sawPreferenceChange = true;
+      enabled = changes[SHOW_EXPORT_BUTTON_KEY].newValue !== false;
+      preferenceReady = true;
+      changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(changes, RAISE_EXPORT_BUTTON_KEY)) {
+      sawPositionChange = true;
+      raised = changes[RAISE_EXPORT_BUTTON_KEY].newValue === true;
+      positionReady = true;
+      positionButton();
+      changed = true;
+    }
+    if (changed) sync();
   });
-  chrome.storage.local.get({ [SHOW_EXPORT_BUTTON_KEY]: true })
+  chrome.storage.local.get({ [SHOW_EXPORT_BUTTON_KEY]: true, [RAISE_EXPORT_BUTTON_KEY]: false })
     .then(settings => {
       if (!sawPreferenceChange) {
         enabled = settings[SHOW_EXPORT_BUTTON_KEY] !== false;
         preferenceReady = true;
-        sync();
       }
+      if (!sawPositionChange) {
+        raised = settings[RAISE_EXPORT_BUTTON_KEY] === true;
+        positionReady = true;
+      }
+      positionButton();
+      sync();
     })
     .catch(() => {
-      // Safe fallback if storage is unavailable: show the default-on button.
+      // Preserve each newer onChanged value if the initial read fails.
       if (!sawPreferenceChange) {
         enabled = true;
         preferenceReady = true;
-        sync();
       }
+      if (!sawPositionChange) {
+        raised = false;
+        positionReady = true;
+      }
+      positionButton();
+      sync();
     });
   // Handles ChatGPT SPA route changes without modifying site history APIs.
   new MutationObserver(scheduleSync).observe(document.documentElement, {childList:true, subtree:true});
   window.addEventListener('popstate', scheduleSync);
   window.addEventListener('hashchange', scheduleSync);
   window.addEventListener('pageshow', scheduleSync);
-  globalThis.__ChatGPTObsidianDomLauncher = {version:'0.3.9.2'};
+  globalThis.__ChatGPTObsidianDomLauncher = {version:'0.3.9.3'};
 })();

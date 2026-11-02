@@ -12,7 +12,7 @@ node tests/button-toggle.js
 python3 scripts/package_extension.py
 ```
 
-Для разработки загружайте корень репозитория в `chrome://extensions` → «Режим разработчика» → «Загрузить распакованное». Проверочный пакет: `dist/chatgpt-obsidian-exporter-v0.3.9.2.zip`.
+Для разработки загружайте корень репозитория в `chrome://extensions` → «Режим разработчика» → «Загрузить распакованное». Проверочный пакет: `dist/chatgpt-obsidian-exporter-v0.3.9.3.zip`.
 
 В реальном Chrome отдельно проверяйте: создание ZIP, переходы протокола в Obsidian, кодовые блоки и доступные вложения. Node-тесты **не доказывают** работу внутреннего API ChatGPT и рендеринг Obsidian.
 

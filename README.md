@@ -4,7 +4,7 @@
 
 [English](README.md) · [Русский](README.ru.md) · [Installation](#quick-start) · [Archive format](docs/export-format.md) · [Contributing](CONTRIBUTING.md)
 
-**Version:** 0.3.9.2 · **Platform:** Chrome Manifest V3 · **Status:** stable release
+**Version:** 0.3.9.3 · **Platform:** Chrome Manifest V3 · **Status:** preview (v0.3.9.2 remains stable)
 
 ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT conversation** into a self-contained ZIP archive. It includes readable Markdown, a numbered navigation protocol with Obsidian wiki-links, available files and images, the source conversation JSON, and a report showing what was and was not saved.
 
@@ -20,7 +20,7 @@ ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT
 
 ## Highlights
 
-| Area | What v0.3.9.2 does |
+| Area | What v0.3.9.3 does |
 | --- | --- |
 | Conversation export | Exports the current chat; splits lengthy Markdown transcripts into parts of about 200 KiB. |
 | Navigation | `00_Протокол.md` with numbered Q&A steps and full-path Obsidian wiki-links. |
@@ -31,18 +31,19 @@ ChatGPT Obsidian Exporter is a browser extension that exports **one open ChatGPT
 | Transparency | ZIP includes a machine-readable asset registry and human-readable export report. |
 
 
-## Automation / DOM button (v0.3.9.2)
+## Automation / DOM button (v0.3.9.3 preview)
 
-On a ChatGPT conversation page a fixed **Экспорт ZIP** button appears in the bottom-right corner. A browser-based AI agent or user can click it directly in the DOM. Unlike the Popup route, this action uses fixed default settings with **incoming uploads enabled**, as well as outbound files and images. The existing Popup still offers its original controls.
+On a ChatGPT conversation page a fixed **Экспорт ZIP** button appears at the right edge, initially in the bottom-right corner. A browser-based AI agent or user can click it directly in the DOM. Unlike the Popup route, this action uses fixed default settings with **incoming uploads enabled**, as well as outbound files and images. The existing Popup still offers its original controls.
 
 - The button is injected only on ChatGPT domains and displayed only on conversation paths, including SPA navigation. The **Включить кнопку** checkbox is the first item in the extension Popup. It is on by default; turning it off immediately hides the DOM button on open ChatGPT tabs without stopping an in-progress export. Turning it back on restores the button. Your choice survives browser restarts and does not affect manual Popup exports.
-- The `storage` Chrome permission stores the visibility preference locally (shared across the extension's tabs). No additional host access is requested.
+- The second checkbox, **Поднять кнопку**, is **off** by default. When enabled, it moves the on-page button to the vertical midpoint of the right edge (CSS `top: 50%` with `translateY(-50%)`); unchecking returns it to the bottom-right corner. Switching is immediate in every ChatGPT tab, persists across restarts, and does not change the export functionality or the **Включить кнопку** choice.
+- The `storage` Chrome permission stores the visibility and position preferences locally (shared across the extension's tabs). No additional host access is requested.
 - Agent target: `#chatgpt-obsidian-export-zip-button`. Read `data-export-status`: `idle`, `running`, `ready`, or `error`.
 - Detailed progress appears in `#chatgpt-obsidian-export-panel` with its own `data-export-status` (`running`, `ready`, `error`).
 - **ready means ZIP creation and a browser download attempt**, not proof of a completed download. The automation environment must check Chrome's downloads before moving the file.
 - Default asset settings: include outbound files, images and incoming user uploads; paced downloads at 1.5 s; max 100 MB per file, with the pre-existing total download budget and error handling. Unavailable assets remain explicitly reported.
 
-The DOM button, file downloads and visibility toggle have been exercised in Chrome. Download the installable ZIP from [GitHub Releases](https://github.com/dmitromelnikoff/chatgpt-obsidian-exporter/releases/tag/v0.3.9.2), extract it to a permanent folder, then choose that folder in `chrome://extensions` → Developer mode → Load unpacked. No Chrome Web Store listing is available.
+v0.3.9.3 is an unreleased preview for testing the new position checkbox. Download its installable ZIP from the latest successful [feature-branch GitHub Actions run](https://github.com/dmitromelnikoff/chatgpt-obsidian-exporter/actions/workflows/ci.yml), extract it to a permanent folder, then choose that folder in `chrome://extensions` → Developer mode → Load unpacked. The preceding stable release remains [v0.3.9.2](https://github.com/dmitromelnikoff/chatgpt-obsidian-exporter/releases/tag/v0.3.9.2). No Chrome Web Store listing is available.
 
 ## Quick start
 
@@ -50,7 +51,7 @@ This repository's root is the **unpacked Chrome extension directory**; there is 
 
 1. Download the installable ZIP from [GitHub Releases](https://github.com/dmitromelnikoff/chatgpt-obsidian-exporter/releases/tag/v0.3.9.2) (or clone the source repository) and extract it into a permanent folder.
 2. Open `chrome://extensions`, turn on **Developer mode**, select **Load unpacked**, and choose the folder containing `manifest.json`.
-3. Open a conversation at `https://chatgpt.com/c/...` and click **Экспорт ZIP** at the bottom-right, or open the extension Popup for manual options.
+3. Open a conversation at `https://chatgpt.com/c/...` and click **Экспорт ZIP** on the right (bottom by default, center if raised), or open the extension Popup for manual options.
 4. In the Popup, choose whether to include files, images, and your own incoming uploads; the on-page button uses its own fixed defaults, with incoming uploads included.
 5. The extension shows progress on the ChatGPT page and downloads a ZIP.
 6. Extract the ZIP's **entire named root folder** into your Obsidian vault. Open `00_Протокол.md`.
